@@ -67,18 +67,21 @@ Both VPNs start, networking is configured, and they auto-restart on reboot.
 
 ### 4. Generate client configs
 
-**OpenVPN:**
+From your Mac (generates remotely and downloads the config):
 
 ```bash
-docker compose exec openvpn generate-client my-device
-docker compose cp openvpn:/etc/openvpn/clients/my-device.ovpn ./configs/
+./generate-client.sh wg mehdi-mac 2
+./generate-client.sh ovpn mehdi-mac
 ```
 
-**WireGuard:**
+Or locally on the Windows machine:
 
 ```bash
 docker compose exec wireguard generate-client my-device 2
 docker compose cp wireguard:/etc/wireguard/clients/my-device.conf ./configs/
+
+docker compose exec openvpn generate-client my-device
+docker compose cp openvpn:/etc/openvpn/clients/my-device.ovpn ./configs/
 ```
 
 ### 5. Router port forwards
@@ -130,6 +133,7 @@ All deployment-specific values live in `.env` (not committed to git):
 ├── .env                            # Your config (gitignored)
 ├── docker-compose.yml
 ├── deploy.sh                       # Deploy from Mac to Windows
+├── generate-client.sh              # Generate client configs remotely
 ├── docker/
 │   ├── openvpn/
 │   │   ├── Dockerfile
@@ -158,6 +162,8 @@ docker compose logs wireguard      # WireGuard logs
 docker compose exec wireguard wg   # WireGuard status
 docker compose build               # Rebuild images after Dockerfile changes
 ./deploy.sh                        # Sync + rebuild + restart from Mac
+./generate-client.sh wg <name> <n> # Generate WireGuard client remotely
+./generate-client.sh ovpn <name>   # Generate OpenVPN client remotely
 ```
 
 ## Data Persistence
