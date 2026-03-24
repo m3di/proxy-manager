@@ -1,0 +1,13 @@
+# Environment config (contains IPs, usernames)
+.env
+
+# Client configs contain private keys
+*.ovpn
+configs/*.conf
+!configs/server.conf
+
+# Backups
+backup/
+
+# macOS
+.DS_Store

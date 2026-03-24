@@ -1,0 +1,38 @@
+services:
+  openvpn:
+    build: ./docker/openvpn
+    container_name: openvpn
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - "1194:1194/tcp"
+    volumes:
+      - openvpn-data:/etc/openvpn
+    environment:
+      - REMOTE_HOST=${VPN_PUBLIC_IP:?Set VPN_PUBLIC_IP in .env}
+    sysctls:
+      - net.ipv4.ip_forward=1
+    restart: always
+
+  wireguard:
+    build: ./docker/wireguard
+    container_name: wireguard
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - "51820:51820/udp"
+    volumes:
+      - wireguard-data:/etc/wireguard
+    environment:
+      - REMOTE_HOST=${VPN_PUBLIC_IP:?Set VPN_PUBLIC_IP in .env}
+    sysctls:
+      - net.ipv4.ip_forward=1
+    restart: always
+
+volumes:
+  openvpn-data:
+  wireguard-data:
