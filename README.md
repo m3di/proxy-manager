@@ -35,7 +35,7 @@ Windows Host (<LAN IP>)
 Internet exit (second ISP)
 ```
 
-## Quick Start
+## Quick Start (on Windows)
 
 ### 1. Clone and configure
 
@@ -43,19 +43,12 @@ Internet exit (second ISP)
 git clone https://github.com/<your-user>/proxy-manager.git
 cd proxy-manager
 cp .env.example .env
-# Edit .env with your public IP, SSH user, host, etc.
+# Edit .env — at minimum set VPN_PUBLIC_IP to your static public IP
 ```
 
-### 2. One-time Windows setup
+### 2. Install Docker Desktop
 
-On the Windows machine, open an **Admin PowerShell** and run:
-
-```powershell
-# Enable Windows native SSH server
-.\scripts\setup-windows-ssh.ps1
-```
-
-Then install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and set it to start on login.
+Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) with the WSL2 backend, and set it to start on Windows login.
 
 ### 3. Start the VPN servers
 
@@ -66,15 +59,6 @@ docker compose up -d
 Both VPNs start, networking is configured, and they auto-restart on reboot.
 
 ### 4. Generate client configs
-
-From your Mac (generates remotely and downloads the config):
-
-```bash
-./generate-client.sh wg mehdi-mac 2
-./generate-client.sh ovpn mehdi-mac
-```
-
-Or locally on the Windows machine:
 
 ```bash
 docker compose exec wireguard generate-client my-device 2
@@ -90,26 +74,54 @@ Forward these on your router to the Windows host LAN IP:
 - TCP 1194 (OpenVPN)
 - UDP 51820 (WireGuard)
 
-## Deploy from Mac
+That's all you need. The VPNs are running.
 
-After making changes locally, deploy to the Windows machine:
+## Remote Management from Mac (optional)
 
-```bash
-./deploy.sh
+If you want to deploy changes and generate configs from your Mac without
+touching the Windows machine, enable SSH on Windows:
+
+### One-time SSH setup
+
+On Windows, open **Admin PowerShell** and run:
+
+```powershell
+.\scripts\setup-windows-ssh.ps1
 ```
 
-This SSHes directly into Windows (native OpenSSH, port 22 — no WSL2 dependency), syncs the project, rebuilds containers, and restarts services.
+This tries the built-in Windows capability first. If that fails (WSUS policies,
+disabled Windows Update, debloated installs), it automatically downloads the
+official OpenSSH release from GitHub as a fallback.
 
-Set up key auth first:
+Then set up key auth from your Mac:
 
 ```bash
 ssh-copy-id <user>@<windows-ip>
 
 # If key auth doesn't work (Windows admin user quirk), SSH in and run:
-#   $key = Get-Content C:\Users\<user>\.ssh\authorized_keys
-#   Add-Content C:\ProgramData\ssh\administrators_authorized_keys $key
+#   $key = Get-Content $env:USERPROFILE\.ssh\authorized_keys
+#   Set-Content C:\ProgramData\ssh\administrators_authorized_keys $key
 #   icacls C:\ProgramData\ssh\administrators_authorized_keys /inheritance:r /grant "Administrators:F" /grant "SYSTEM:F"
 ```
+
+### Deploy from Mac
+
+After making changes locally:
+
+```bash
+./deploy.sh
+```
+
+Syncs the project to Windows via rsync, rebuilds containers, restarts services.
+
+### Generate clients from Mac
+
+```bash
+./generate-client.sh wg mehdi-mac 2
+./generate-client.sh ovpn mehdi-mac
+```
+
+Generates inside the container and downloads the config file to `configs/`.
 
 ## Configuration
 
